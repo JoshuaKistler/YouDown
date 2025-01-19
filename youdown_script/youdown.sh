@@ -15,6 +15,7 @@ download_mp4() {
     yt-dlp -f mp4 --ffmpeg-location "$FFMPEG_PATH" "$1" --newline | while IFS= read -r line; do
         if [[ $line =~ \[download\]\ +([0-9]+\.[0-9]+)% ]]; then
             progress=${BASH_REMATCH[1]}
+            progress=${progress%.*}  # Entferne den Dezimalteil
             draw_progress_bar "$progress"
         fi
     done
@@ -26,6 +27,7 @@ download_mp3() {
     yt-dlp --extract-audio --audio-format mp3 --ffmpeg-location "$FFMPEG_PATH" "$1" --newline | while IFS= read -r line; do
         if [[ $line =~ \[download\]\ +([0-9]+\.[0-9]+)% ]]; then
             progress=${BASH_REMATCH[1]}
+            progress=${progress%.*}  # Entferne den Dezimalteil
             draw_progress_bar "$progress"
         fi
     done
@@ -39,7 +41,7 @@ draw_progress_bar() {
     local filled=$((progress * width / 100))
     local empty=$((width - filled))
     printf "\r["
-    printf "%0.s-" $(seq 1 $filled)
+    printf "%0.s#" $(seq 1 $filled)
     printf "%0.s " $(seq 1 $empty)
     printf "] %s%%" "$progress"
 }
