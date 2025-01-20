@@ -4,7 +4,7 @@
 if ! command -v yt-dlp &> /dev/null
 then
     echo "yt-dlp konnte nicht gefunden werden. Bitte installieren Sie es zuerst."
-    exit
+    exit 1
 fi
 
 # Pfad zu ffmpeg
@@ -14,28 +14,34 @@ FFMPEG_PATH="/c/ffmpeg-7.1-full_build/bin/ffmpeg.exe"
 download_mp4() {
     local url=$1
     local format=$2
-    yt-dlp -f "$format" --ffmpeg-location "$FFMPEG_PATH" "$url" --newline | while IFS= read -r line; do
+    local title=$(yt-dlp --get-title "$url")
+    local date=$(date +%Y-%m-%d)
+    local filename="${title}_${date}.mp4"
+    yt-dlp -f "$format" --ffmpeg-location "$FFMPEG_PATH" -o "$filename" "$url" --newline | while IFS= read -r line; do
         if [[ $line =~ \[download\]\ +([0-9]+\.[0-9]+)% ]]; then
             progress=${BASH_REMATCH[1]}
             progress=${progress%.*}  # Entferne den Dezimalteil
             draw_progress_bar "$progress"
         fi
     done
-    echo -e "\nDownload abgeschlossen."
+    echo -e "\nDownload abgeschlossen. Datei gespeichert als $filename"
 }
 
 # Funktion zum Herunterladen von MP3
 download_mp3() {
     local url=$1
     local format=$2
-    yt-dlp -f "$format" --extract-audio --audio-format mp3 --ffmpeg-location "$FFMPEG_PATH" "$url" --newline | while IFS= read -r line; do
+    local title=$(yt-dlp --get-title "$url")
+    local date=$(date +%Y-%m-%d)
+    local filename="${title}_${date}.mp3"
+    yt-dlp -f "$format" --extract-audio --audio-format mp3 --ffmpeg-location "$FFMPEG_PATH" -o "$filename" "$url" --newline | while IFS= read -r line; do
         if [[ $line =~ \[download\]\ +([0-9]+\.[0-9]+)% ]]; then
             progress=${BASH_REMATCH[1]}
             progress=${progress%.*}  # Entferne den Dezimalteil
             draw_progress_bar "$progress"
         fi
     done
-    echo -e "\nDownload abgeschlossen."
+    echo -e "\nDownload abgeschlossen. Datei gespeichert als $filename"
 }
 
 # Funktion zum Zeichnen der Fortschrittsleiste
