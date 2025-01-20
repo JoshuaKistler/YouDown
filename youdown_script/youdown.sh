@@ -12,7 +12,9 @@ FFMPEG_PATH="/c/ffmpeg-7.1-full_build/bin/ffmpeg.exe"
 
 # Funktion zum Herunterladen von MP4
 download_mp4() {
-    yt-dlp -f mp4 --ffmpeg-location "$FFMPEG_PATH" "$1" --newline | while IFS= read -r line; do
+    local url=$1
+    local format=$2
+    yt-dlp -f "$format" --ffmpeg-location "$FFMPEG_PATH" "$url" --newline | while IFS= read -r line; do
         if [[ $line =~ \[download\]\ +([0-9]+\.[0-9]+)% ]]; then
             progress=${BASH_REMATCH[1]}
             progress=${progress%.*}  # Entferne den Dezimalteil
@@ -24,7 +26,9 @@ download_mp4() {
 
 # Funktion zum Herunterladen von MP3
 download_mp3() {
-    yt-dlp --extract-audio --audio-format mp3 --ffmpeg-location "$FFMPEG_PATH" "$1" --newline | while IFS= read -r line; do
+    local url=$1
+    local format=$2
+    yt-dlp -f "$format" --extract-audio --audio-format mp3 --ffmpeg-location "$FFMPEG_PATH" "$url" --newline | while IFS= read -r line; do
         if [[ $line =~ \[download\]\ +([0-9]+\.[0-9]+)% ]]; then
             progress=${BASH_REMATCH[1]}
             progress=${progress%.*}  # Entferne den Dezimalteil
@@ -58,15 +62,26 @@ if [ -z "$2" ]; then
     exit 1
 fi
 
+# URL und Format speichern
+URL=$1
+FORMAT=$2
+
+# Verfügbare Formate auflisten
+echo "Verfügbare Formate für $URL:"
+yt-dlp -F "$URL"
+
+# Benutzer zur Auswahl eines Formats auffordern
+read -p "Bitte geben Sie die gewünschte Format-ID ein: " FORMAT_ID
+
 # Herunterladen basierend auf dem angegebenen Format
-case "$2" in
+case "$FORMAT" in
     mp4)
         echo "Download von MP4 gestartet..."
-        download_mp4 "$1"
+        download_mp4 "$URL" "$FORMAT_ID"
         ;;
     mp3)
         echo "Download von MP3 gestartet..."
-        download_mp3 "$1"
+        download_mp3 "$URL" "$FORMAT_ID"
         ;;
     *)
         echo "Ungültiges Format angegeben. Bitte wählen Sie entweder 'mp4' oder 'mp3'."
